@@ -20,13 +20,13 @@ ap.add_argument("-r", "--recognizer", required=True,
 	help="Đường dẫn tới mô hình đã được train nhận diện mặt người")
 ap.add_argument("-l", "--le", required=True,
 	help="Đường dẫn tới bộ mã hóa các nhãn tên")
-ap.add_argument("-c", "--confidence", type=float, default=0.5,
+ap.add_argument("-c", "--confidence", type=float, default=0.7,
 	help="xác suất tối thiểu để loại ra các dự đoán yếu")
 args = vars(ap.parse_args())
 
 # tiến hành load các mô hình phát hiện khuôn mặt 
 print("[INFO] tiến hành load mô hình phát hiện khuôn mặt...")
-DNN = "TF"
+DNN = "CAFFE"
 if DNN == "CAFFE":
     modelFile = "face_detection_model/res10_300x300_ssd_iter_140000.caffemodel"
     configFile = "face_detection_model/deploy.prototxt"
@@ -98,10 +98,13 @@ while True:
 			# tiền hành phân loại để nhận diện khuôn mặt
 			preds = recognizer.predict_proba(vec)[0]
 			print (preds)
-			j = np.argmax(preds)
-			print (j)
-			proba = preds[j]
-			name = le.classes_[j]
+			if all (i < 0.7 for i in preds):
+				name = 'unknow'
+				proba = 0
+			else:
+				j = np.argmax(preds)
+				proba = preds[j]
+				name = le.classes_[j]
 
 			# vẽ khung khoanh vùng khuôn mặt và hiển thị số xác suất đi kèm.
 			text = "{}: {:.2f}%".format(name, proba * 100)
